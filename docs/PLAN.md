@@ -32,7 +32,8 @@ Quiz Battle covers all three. It's a Kahoot-style version of your Math Quiz Arca
 - The first player is the host. If the host leaves, the next player becomes host.
 - The host presses **Start** (needs 2+ players). The room then locks: no new players, but dropped players can still come back.
 - **10 rounds.** Each round has a **question phase** (15 s) and then a **reveal phase** (4 s). A question ends early if every connected player has answered.
-- **Difficulty goes up.** Rounds 1–3: add/subtract. Rounds 4–6: times tables (2–12). Rounds 7–8: two steps (`a × b + c`). Rounds 9–10: bigger numbers, mixed.
+- **Age groups.** The host picks who's playing when creating the room: ages 7–8, 9–10 or 11–12. Everyone in the room gets the same questions for that age group.
+- **Difficulty goes up** within the age group, in four steps: rounds 1–3, 4–6, 7–8 and 9–10. For example, ages 7–8 go from sums within 10 to the 2, 5 and 10 times tables; ages 11–12 go from times tables to 12 up to percentages and order of operations. The full list is in `src/game/questions.ts`.
 - Each question has **4 choices**: the right answer plus 3 close wrong ones. All 4 are different, none are negative, and they're shuffled.
 - **Score:** a wrong answer or no answer gets 0. A right answer gets `500 + round(500 × timeLeft / 15)`, which is 500–1000 points. The server measures the time with its own clock when your message arrives.
 - Only your first answer counts.
@@ -48,7 +49,7 @@ Quiz Battle covers all three. It's a Kahoot-style version of your Math Quiz Arca
 **State shape** (you'll write this):
 ```
 Player:    name, score, isHost, connected, hasAnswered, lastAnswer (-1 until reveal), lastGain
-QuizState: players (map by sessionId), phase ("lobby" | "question" | "reveal" | "podium"),
+QuizState: players (map by sessionId), ageGroup ("7-8" | "9-10" | "11-12"), phase ("lobby" | "question" | "reveal" | "podium"),
            round, totalRounds, questionText, choices (4 strings), timeLeft, correctIndex (-1 until reveal)
 ```
 **Messages from client to server:** `start`, `answer { choice }`, `playAgain`. Everything else goes through the state.
@@ -64,7 +65,8 @@ vitest.config.ts                   test config (kept apart so tests don't boot t
 src/app.config.ts                  server config: register rooms, HTTP routes, Express (/health, CORS in M5)
 src/rooms/QuizRoom.ts              ← you (M1–M4)
 src/rooms/schema/QuizState.ts      ← you (M1)   Player + QuizState
-src/game/questions.ts              ← you (M2)   pure functions, unit-tested
+src/game/questions.ts              Claude (done) question generator, tested in test/questions.test.ts
+src/shared/ageGroups.ts            Claude (done) the three age groups, isAgeGroup() for checking create options
 src/game/scoring.ts                ← you (M3)   pure functions, unit-tested
 src/shared/rules.ts                ← you (M1)   ROUND_SECONDS, TOTAL_ROUNDS, MAX_PLAYERS, message names
 src/client/main.tsx                React entry
@@ -93,18 +95,19 @@ Each milestone ends with something you can run. Rough time: 5–7 evenings in to
 ### M1: Rooms and lobby (you write, ~1 evening)
 - **You:** the `Player` and `QuizState` schemas. In `QuizRoom`: `onCreate` (4-letter code using the docs' "custom room ID" recipe, `maxClients = 8`), `onJoin` (add the player, first one is host, check the name), `onLeave` (remove the player, pass on the host role). Register it in `src/app.config.ts`. In the client: `client.create()` and `client.joinById(code, { name })`, and read the player list with `useRoomState`.
 - **Claude:** ✅ Home screen (nickname, Create, Join with code) and Lobby screen (big room code, player list with host badge, Start button only for the host). Built with sample data first (`src/client/preview/`). A share link `?room=KTPQ` fills in the code.
-  - Home props: `initialCode`, `initialName`, `busy`, `error`, `onCreate(name)`, `onJoin(code, name)`.
-  - Lobby props: `code`, `players` (array of `{ sessionId, name, isHost, connected }`, undefined while loading), `mySessionId`, `minPlayers`, `maxPlayers`, `starting`, `onStart()`, `onLeave()`.
+  - Home props: `initialCode`, `initialName`, `initialAgeGroup`, `busy`, `error`, `onCreate(name, ageGroup)`, `onJoin(code, name)`.
+  - Lobby props: `code`, `ageGroup`, `players` (array of `{ sessionId, name, isHost, connected }`, undefined while loading), `mySessionId`, `minPlayers`, `maxPlayers`, `starting`, `onStart()`, `onLeave()`.
   - Your wiring: turn the state's `players` map into that array, and pass `room.roomId` as `code` and `room.sessionId` as `mySessionId`.
+  - Age group: send it as a create option (`client.create("quiz_room", { name, ageGroup })`). In `QuizRoom.onCreate`, check it with `isAgeGroup()` (a client can send anything), fall back to `DEFAULT_AGE_GROUP`, and store it in the state so the Lobby can show it.
 - **You learn:** the room lifecycle, how state syncs, `sessionId`, joining a room by its ID.
 
 ### M2: Game loop (you write, ~2 evenings)
-- **You:** the phase machine lobby → question → reveal → … → podium → lobby. The `start` handler (host only, locks the room). `game/questions.ts` (difficulty by round, 4 unique choices). The timer: `this.clock.setInterval` counts `timeLeft` down, and `this.clock.setTimeout` moves from reveal to the next round. Clear old timers on every phase change. The `answer` handler with all the checks above. End early when all connected players have answered. Reveal, podium, `playAgain`.
+- **You:** the phase machine lobby → question → reveal → … → podium → lobby. The `start` handler (host only, locks the room). Questions: call `makeQuestionSet(state.ageGroup, TOTAL_ROUNDS)` when the game starts and keep the result in a private room field (it holds `correctIndex`). Each round, copy only `text` and `choices` into the state. The timer: `this.clock.setInterval` counts `timeLeft` down, and `this.clock.setTimeout` moves from reveal to the next round. Clear old timers on every phase change. The `answer` handler with all the checks above. End early when all connected players have answered. Reveal, podium, `playAgain`.
 - **Claude:** Question screen (round x/10, timer bar, 2×2 grid of big answer buttons, a "Locked in, 3/5 answered" state), Reveal screen (right answer, your +points or Wrong, mini leaderboard), Podium screen.
 - **You learn:** authoritative servers, when to use state and when to use messages, keeping secrets from clients, timing on the server.
 
 ### M3: Scoring and tests (you write, ~1 evening)
-- **You:** `game/scoring.ts` and the Vitest tests for scoring and questions. Test 0 s and 15 s left, and wrong answers. Check that the right answer is always in the choices and that there are no duplicates or negatives. Claude writes the first test as an example.
+- **You:** `game/scoring.ts` and its Vitest tests. Test 0 s and 15 s left, and wrong answers. (The question tests already exist in `test/questions.test.ts`; use them as the example.)
 - **You:** one room test with `@colyseus/testing` (`test/MyRoom.test.ts` shows the boot/connect pattern). 3 fake clients join, the host starts, they answer, and the test checks the scores. It also checks that a second answer, an answer in the lobby, and Start from a non-host are all ignored.
 
 ### M4: Real phones, bad networks (you write, ~1 evening)

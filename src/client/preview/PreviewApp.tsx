@@ -2,6 +2,7 @@ import { useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Home, type HomeBusy } from "../screens/Home";
 import { Lobby, type LobbyPlayer } from "../screens/Lobby";
 import { readInviteCode } from "../inviteLink";
+import { DEFAULT_AGE_GROUP, type AgeGroup } from "../../shared/ageGroups";
 
 // Runs the screens on sample data so they can be checked before QuizRoom
 // exists. Nothing here talks to the server. Delete this folder once the real
@@ -29,6 +30,7 @@ export function PreviewApp() {
   const [starting, setStarting] = useState(false);
   const [notice, setNotice] = useState<string>();
   const [lastName, setLastName] = useState("");
+  const [ageGroup, setAgeGroup] = useState<AgeGroup>(DEFAULT_AGE_GROUP);
 
   function fakeRequest(kind: "create" | "join", succeed: () => void, failMessage: string) {
     setBusy(kind);
@@ -55,12 +57,16 @@ export function PreviewApp() {
         <Home
           initialCode={readInviteCode()}
           initialName={lastName}
+          initialAgeGroup={ageGroup}
           busy={busy}
           error={error}
-          onCreate={(name) =>
+          onCreate={(name, group) =>
             fakeRequest(
               "create",
-              () => enterLobby(SAMPLE_CODE, [{ sessionId: ME, name, isHost: true, connected: true }]),
+              () => {
+                setAgeGroup(group);
+                enterLobby(SAMPLE_CODE, [{ sessionId: ME, name, isHost: true, connected: true }]);
+              },
               "Sample error: the game server didn't answer. Check it's running, then try again.",
             )
           }
@@ -94,6 +100,7 @@ export function PreviewApp() {
     <>
       <Lobby
         code={code}
+        ageGroup={ageGroup}
         players={players}
         mySessionId={ME}
         minPlayers={MIN_PLAYERS}

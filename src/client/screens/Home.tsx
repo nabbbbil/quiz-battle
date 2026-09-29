@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button } from "../ui/Button";
 import { ROOM_CODE_LENGTH } from "../inviteLink";
+import { AGE_GROUPS, DEFAULT_AGE_GROUP, type AgeGroup } from "../../shared/ageGroups";
 
 // Keep in sync with the server's nickname rule.
 const NAME_MAX_LENGTH = 12;
@@ -12,15 +13,26 @@ interface HomeProps {
   initialCode?: string;
   /** The nickname used last time, so leaving a room doesn't make the player retype it. */
   initialName?: string;
+  /** The age group picked last time. */
+  initialAgeGroup?: AgeGroup;
   busy: HomeBusy;
   /** Why the last create or join failed, in plain words. */
   error?: string;
-  onCreate: (name: string) => void;
+  onCreate: (name: string, ageGroup: AgeGroup) => void;
   onJoin: (code: string, name: string) => void;
 }
 
-export function Home({ initialCode = "", initialName = "", busy, error, onCreate, onJoin }: HomeProps) {
+export function Home({
+  initialCode = "",
+  initialName = "",
+  initialAgeGroup = DEFAULT_AGE_GROUP,
+  busy,
+  error,
+  onCreate,
+  onJoin,
+}: HomeProps) {
   const [name, setName] = useState(initialName);
+  const [ageGroup, setAgeGroup] = useState<AgeGroup>(initialAgeGroup);
   const [code, setCode] = useState(initialCode);
   const [nameError, setNameError] = useState<string>();
   const [codeError, setCodeError] = useState<string>();
@@ -38,7 +50,7 @@ export function Home({ initialCode = "", initialName = "", busy, error, onCreate
     if (busy) return;
     setCodeError(undefined);
     const trimmed = validName();
-    if (trimmed) onCreate(trimmed);
+    if (trimmed) onCreate(trimmed, ageGroup);
     else nameRef.current?.focus();
   }
 
@@ -118,18 +130,52 @@ export function Home({ initialCode = "", initialName = "", busy, error, onCreate
     </section>
   );
 
-  const createButton = (
-    <Button
-      type="submit"
-      name="intent"
-      value="create"
-      variant={invited ? "secondary" : "primary"}
-      busy={busy === "create"}
-      disabled={busy === "join"}
-      className="w-full"
-    >
-      {busy === "create" ? "Creating room…" : invited ? "Create my own room instead" : "Create a room"}
-    </Button>
+  const createSection = (
+    <section aria-labelledby={invited ? "create-heading" : undefined} className="flex flex-col gap-4">
+      {invited && (
+        <h2 id="create-heading" className="text-xl font-semibold">
+          Or start your own room
+        </h2>
+      )}
+      {/* A compact switch rather than three cards, so joiners (most players)
+          don't scroll past a choice that isn't theirs. */}
+      <fieldset aria-describedby="age-topics">
+        <legend className="font-semibold">Players' age</legend>
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {AGE_GROUPS.map((g) => (
+            <label
+              key={g.id}
+              className="flex min-h-12 cursor-pointer items-center justify-center rounded-xl border-2 border-line bg-white font-display text-lg font-semibold has-checked:border-ink has-checked:bg-ink has-checked:text-white has-focus-visible:outline-3 has-focus-visible:outline-offset-3 has-focus-visible:outline-ink"
+            >
+              <input
+                type="radio"
+                name="age-group"
+                value={g.id}
+                checked={ageGroup === g.id}
+                onChange={() => setAgeGroup(g.id)}
+                aria-label={g.label}
+                className="sr-only"
+              />
+              {g.label.replace("Ages ", "")}
+            </label>
+          ))}
+        </div>
+        <p id="age-topics" className="mt-2 text-sm text-ink-soft">
+          {AGE_GROUPS.find((g) => g.id === ageGroup)!.topics}.
+        </p>
+      </fieldset>
+      <Button
+        type="submit"
+        name="intent"
+        value="create"
+        variant={invited ? "secondary" : "primary"}
+        busy={busy === "create"}
+        disabled={busy === "join"}
+        className="w-full"
+      >
+        {busy === "create" ? "Creating room…" : "Create a room"}
+      </Button>
+    </section>
   );
 
   return (
@@ -182,11 +228,11 @@ export function Home({ initialCode = "", initialName = "", busy, error, onCreate
         {invited ? (
           <>
             {joinSection}
-            {createButton}
+            {createSection}
           </>
         ) : (
           <>
-            {createButton}
+            {createSection}
             {joinSection}
           </>
         )}

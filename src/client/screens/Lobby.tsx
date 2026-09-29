@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "../ui/Button";
 import { inviteUrl } from "../inviteLink";
+import { ageGroupLabel, type AgeGroup } from "../../shared/ageGroups";
 
 export interface LobbyPlayer {
   sessionId: string;
@@ -11,6 +12,7 @@ export interface LobbyPlayer {
 
 interface LobbyProps {
   code: string;
+  ageGroup: AgeGroup;
   /** Undefined until the first room state arrives. */
   players: LobbyPlayer[] | undefined;
   mySessionId: string;
@@ -24,7 +26,7 @@ interface LobbyProps {
 
 type ShareStatus = "idle" | "copied" | "failed";
 
-export function Lobby({ code, players, mySessionId, minPlayers, maxPlayers, starting = false, onStart, onLeave }: LobbyProps) {
+export function Lobby({ code, ageGroup, players, mySessionId, minPlayers, maxPlayers, starting = false, onStart, onLeave }: LobbyProps) {
   const [shareStatus, setShareStatus] = useState<ShareStatus>("idle");
   const link = inviteUrl(code);
 
@@ -77,7 +79,8 @@ export function Lobby({ code, players, mySessionId, minPlayers, maxPlayers, star
               </span>
             ))}
           </div>
-          <p className="mt-4 text-ink-soft">Friends open the game and type this code, or you send them the link.</p>
+          <p className="mt-4 font-semibold">Questions for {ageGroupLabel(ageGroup).toLowerCase()}</p>
+          <p className="mt-1 text-ink-soft">Friends open the game and type this code, or you send them the link.</p>
           <Button onClick={share} className="mt-4 w-full sm:w-auto">
             Share invite link
           </Button>
