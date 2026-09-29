@@ -1,0 +1,9 @@
+node_modules
+build
+dist
+.colyseus-cloud.json
+.devmode.json
+
+# env files hold per-machine settings; .env.example documents them
+.env*
+!.env.example

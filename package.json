@@ -1,0 +1,50 @@
+{
+  "private": true,
+  "name": "quiz-battle",
+  "version": "0.1.0",
+  "description": "Quiz Battle: a browser multiplayer math quiz (Colyseus + React)",
+  "type": "module",
+  "engines": {
+    "node": ">= 22.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "build:client": "vite build --mode client",
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "loadtest": "tsx loadtest/example.ts --room my_room --numClients 2",
+    "clean": "rimraf dist"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@colyseus/loadtest": "^0.18.1",
+    "@colyseus/sdk": "^0.18.1",
+    "@colyseus/testing": "^0.18.5",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.13.13",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "rimraf": "^5.0.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.0.4",
+    "vite": "^8.2.1",
+    "vitest": "^5.0.2"
+  },
+  "dependencies": {
+    "@colyseus/playground": "^0.18.3",
+    "@colyseus/react": "^0.18.2",
+    "@colyseus/schema": "^5.0.14",
+    "@colyseus/tools": "^0.18.1",
+    "colyseus": "^0.18.2",
+    "express": "^5.2.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}
