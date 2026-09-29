@@ -1,10 +1,7 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button } from "../ui/Button";
-import { ROOM_CODE_LENGTH } from "../inviteLink";
+import { NAME_MAX_LENGTH, ROOM_CODE_LENGTH } from "../../shared/rules";
 import { AGE_GROUPS, DEFAULT_AGE_GROUP, type AgeGroup } from "../../shared/ageGroups";
-
-// Keep in sync with the server's nickname rule.
-const NAME_MAX_LENGTH = 12;
 
 export type HomeBusy = "create" | "join" | null;
 

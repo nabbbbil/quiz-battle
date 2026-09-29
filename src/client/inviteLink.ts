@@ -1,4 +1,4 @@
-export const ROOM_CODE_LENGTH = 4;
+import { ROOM_CODE_LENGTH } from "../shared/rules";
 
 /** The room code from a share link like `/?room=KTPQ`, or "" if it's missing or malformed. */
 export function readInviteCode(search = location.search): string {

@@ -9,7 +9,7 @@ Quiz Battle covers all three. It's a Kahoot-style version of your Math Quiz Arca
 **Decisions made:**
 - Everyone plays on their own phone. The person who makes the room is the host and presses Start.
 - The server generates the math questions (no question content to write).
-- **Claude sets up the project, config, UI screens and deploy. You write the multiplayer game code** (state, room, rules, timer, scoring, reconnection, and the client code that talks to the room). Claude gives hints and reviews your code, but doesn't rewrite it unless you ask.
+- **Claude sets up the project, config, UI screens and deploy.** The plan was for you to write the multiplayer game code. On 29 Sep 2026 you asked Claude to write it instead (questions, then the whole room and the client wiring), so M1–M4 are done. The code has comments explaining why each part works the way it does.
 - **Hosting must be free.** Your Railway trial has ended, so the server goes on Render's free tier and the client on Vercel.
 - **Project folder:** `C:\Users\akusu\OneDrive\Documents\math quiz` (npm package name `quiz-battle`).
 
@@ -56,31 +56,29 @@ QuizState: players (map by sessionId), ageGroup ("7-8" | "9-10" | "11-12"), phas
 
 ## Project layout (confirmed in M0)
 
-`create-colyseus-app --layout vite` puts client and server in one Vite project. Files marked ← you are yours to write.
+`create-colyseus-app --layout vite` puts client and server in one Vite project.
 
 ```
 index.html                         client HTML entry
 vite.config.ts                     React + Tailwind + colyseus/vite plugin
 vitest.config.ts                   test config (kept apart so tests don't boot the dev server)
 src/app.config.ts                  server config: register rooms, HTTP routes, Express (/health, CORS in M5)
-src/rooms/QuizRoom.ts              ← you (M1–M4)
-src/rooms/schema/QuizState.ts      ← you (M1)   Player + QuizState
-src/game/questions.ts              Claude (done) question generator, tested in test/questions.test.ts
-src/shared/ageGroups.ts            Claude (done) the three age groups, isAgeGroup() for checking create options
-src/game/scoring.ts                ← you (M3)   pure functions, unit-tested
-src/shared/rules.ts                ← you (M1)   ROUND_SECONDS, TOTAL_ROUNDS, MAX_PLAYERS, message names
+src/rooms/QuizRoom.ts              the game: lobby, rounds, timer, answers, reveal, podium, reconnection
+src/rooms/schema/QuizState.ts      Player + QuizState, the state every phone sees
+src/game/questions.ts              question generator per age group
+src/game/scoring.ts                points for one answer (500–1000 when right)
+src/shared/rules.ts                player limits, round count, timings, points
+src/shared/ageGroups.ts            the three age groups, isAgeGroup() for checking create options
 src/client/main.tsx                React entry
-src/client/App.tsx                 ← you (M1)   for now it re-exports the sample-data preview
+src/client/App.tsx                 connects to the room (create, join, rejoin after refresh) and picks the screen
 src/client/colyseus.ts             the shared SDK client (reads VITE_SERVER_URL)
 src/client/inviteLink.ts           reads ?room=KTPQ, builds the share link
-src/client/screens/                Home, Lobby (done), Question, Reveal, Podium (Claude)
+src/client/screens/                Home, Lobby, GameView (temporary: Question, Reveal and Podium come next)
 src/client/ui/Button.tsx           the red/white tile button
-src/client/preview/                sample data for checking screens; delete once the real room is wired
+scripts/sample-questions.ts        npm run sample-questions prints a sample game
 DESIGN.md                          design direction (owner's answers) + dials
-test/*.test.ts                     Vitest
+test/                              questions, scoring and QuizRoom tests (Vitest)
 ```
-
-`src/rooms/MyRoom.ts`, its schema and `test/MyRoom.test.ts` are the generator's example. Keep them as a reference until `QuizRoom` joins in the playground, then delete all three and the `my_room` entry in `app.config.ts`.
 
 ## Milestones
 
@@ -92,28 +90,28 @@ Each milestone ends with something you can run. Rough time: 5–7 evenings in to
 3. `git init`, `.gitignore` (node_modules, dist, `.env*` except `.env.example`), first commit.
 4. **Checked:** `npm run dev` serves everything on **one port, :5173** (not :2567 + :5173 as first guessed: the Vite plugin runs the server inside Vite's HTTP server). The page reaches the server, the playground at `/playground` joins `my_room`, `npm test` and `npm run typecheck` pass, `npm run build` produces both halves.
 
-### M1: Rooms and lobby (you write, ~1 evening)
-- **You:** the `Player` and `QuizState` schemas. In `QuizRoom`: `onCreate` (4-letter code using the docs' "custom room ID" recipe, `maxClients = 8`), `onJoin` (add the player, first one is host, check the name), `onLeave` (remove the player, pass on the host role). Register it in `src/app.config.ts`. In the client: `client.create()` and `client.joinById(code, { name })`, and read the player list with `useRoomState`.
+### M1: Rooms and lobby ✅ done 29 Sep 2026 (Claude, at your request)
+- **Room:** the `Player` and `QuizState` schemas. In `QuizRoom`: `onCreate` (4-letter code using the docs' "custom room ID" recipe, `maxClients = 8`), `onJoin` (add the player, first one is host, check the name), `onLeave` (remove the player, pass on the host role). Register it in `src/app.config.ts`. In the client: `client.create()` and `client.joinById(code, { name })`, and read the player list with `useRoomState`.
 - **Claude:** ✅ Home screen (nickname, Create, Join with code) and Lobby screen (big room code, player list with host badge, Start button only for the host). Built with sample data first (`src/client/preview/`). A share link `?room=KTPQ` fills in the code.
   - Home props: `initialCode`, `initialName`, `initialAgeGroup`, `busy`, `error`, `onCreate(name, ageGroup)`, `onJoin(code, name)`.
   - Lobby props: `code`, `ageGroup`, `players` (array of `{ sessionId, name, isHost, connected }`, undefined while loading), `mySessionId`, `minPlayers`, `maxPlayers`, `starting`, `onStart()`, `onLeave()`.
   - Your wiring: turn the state's `players` map into that array, and pass `room.roomId` as `code` and `room.sessionId` as `mySessionId`.
   - Age group: send it as a create option (`client.create("quiz_room", { name, ageGroup })`). In `QuizRoom.onCreate`, check it with `isAgeGroup()` (a client can send anything), fall back to `DEFAULT_AGE_GROUP`, and store it in the state so the Lobby can show it.
-- **You learn:** the room lifecycle, how state syncs, `sessionId`, joining a room by its ID.
+- **Worth reading in the code:** the room lifecycle, how state syncs, `sessionId`, joining a room by its ID.
 
-### M2: Game loop (you write, ~2 evenings)
-- **You:** the phase machine lobby → question → reveal → … → podium → lobby. The `start` handler (host only, locks the room). Questions: call `makeQuestionSet(state.ageGroup, TOTAL_ROUNDS)` when the game starts and keep the result in a private room field (it holds `correctIndex`). Each round, copy only `text` and `choices` into the state. The timer: `this.clock.setInterval` counts `timeLeft` down, and `this.clock.setTimeout` moves from reveal to the next round. Clear old timers on every phase change. The `answer` handler with all the checks above. End early when all connected players have answered. Reveal, podium, `playAgain`.
-- **Claude:** Question screen (round x/10, timer bar, 2×2 grid of big answer buttons, a "Locked in, 3/5 answered" state), Reveal screen (right answer, your +points or Wrong, mini leaderboard), Podium screen.
-- **You learn:** authoritative servers, when to use state and when to use messages, keeping secrets from clients, timing on the server.
+### M2: Game loop ✅ server done 29 Sep 2026 (Claude, at your request)
+- **Room:** the phase machine lobby → question → reveal → … → podium → lobby. The `start` handler (host only, locks the room). Questions: call `makeQuestionSet(state.ageGroup, TOTAL_ROUNDS)` when the game starts and keep the result in a private room field (it holds `correctIndex`). Each round, copy only `text` and `choices` into the state. The timer: `this.clock.setInterval` counts `timeLeft` down, and `this.clock.setTimeout` moves from reveal to the next round. Clear old timers on every phase change. The `answer` handler with all the checks above. End early when all connected players have answered. Reveal, podium, `playAgain`.
+- **Claude, next:** designed Question screen (round x/10, timer bar, 2×2 grid of big answer buttons, a "Locked in, 3/5 answered" state), Reveal screen (right answer, your +points or Wrong, mini leaderboard), Podium screen. Until then `GameView.tsx` is a plain working stand-in.
+- **Worth reading in the code:** authoritative servers, when to use state and when to use messages, keeping secrets from clients, timing on the server.
 
-### M3: Scoring and tests (you write, ~1 evening)
-- **You:** `game/scoring.ts` and its Vitest tests. Test 0 s and 15 s left, and wrong answers. (The question tests already exist in `test/questions.test.ts`; use them as the example.)
-- **You:** one room test with `@colyseus/testing` (`test/MyRoom.test.ts` shows the boot/connect pattern). 3 fake clients join, the host starts, they answer, and the test checks the scores. It also checks that a second answer, an answer in the lobby, and Start from a non-host are all ignored.
+### M3: Scoring and tests ✅ done 29 Sep 2026 (Claude, at your request)
+- `game/scoring.ts` with `test/scoring.test.ts` (0 s and 15 s left, wrong answers, odd timings).
+- `test/QuizRoom.test.ts` plays a full 10-round game with 3 fake players and checks the scores. It also checks that a second answer, an answer in the lobby, a bad choice, and Start or Play again from a non-host are all ignored, that the right answer isn't visible to other players before reveal, and that dropped players can come back or get removed.
 
-### M4: Real phones, bad networks (you write, ~1 evening)
-- **You:** on the server, `onDrop` → `allowReconnection(client, 30)` and `connected = false`, `onReconnect` → `connected = true`, and `onLeave` removes the player and passes on the host role. On the client, save `room.reconnectionToken` in sessionStorage so a page refresh can come back with `client.reconnect(token)`.
-- **Claude:** a "Reconnecting…" banner, and a "Room not found / game already started" error on the Home screen.
-- **Test:** play on your phone and a laptop on the same Wi-Fi (`npm run dev -- --host`). Turn one off with DevTools → Network → Offline. Refresh in the middle of a question. Lock the phone screen for 10 s.
+### M4: Real phones, bad networks ✅ code done 29 Sep 2026 (Claude, at your request)
+- **Done:** on the server, `onDrop` → `allowReconnection(client, 30)` and `connected = false`, `onReconnect` → `connected = true`, and `onLeave` removes the player and passes on the host role. On the client, save `room.reconnectionToken` in sessionStorage so a page refresh can come back with `client.reconnect(token)`.
+- **Done:** a "Reconnecting…" banner, and "no game with that code" / "already started" errors on the Home screen.
+- **Still to test by hand:** play on your phone and a laptop on the same Wi-Fi (`npm run dev -- --host`). Turn one off with DevTools → Network → Offline. Refresh in the middle of a question. Lock the phone screen for 10 s.
 
 ### M5: Ship it for free (Claude sets it up, you do the account steps, ~1 evening)
 - **Claude:**

@@ -24,6 +24,7 @@ To play from a phone on the same Wi-Fi, run `npm run dev -- --host` and open the
 | `npm run typecheck` | `tsc` over the whole project |
 | `npm run build` | Client to `dist/client/`, server to `dist/server/server.mjs` |
 | `npm run build:client` | Client only, for Vercel |
+| `npm run sample-questions` | Prints a sample 10-round game per age group |
 | `npm run loadtest` | Simulated clients with `@colyseus/loadtest` |
 
 ## Layout
@@ -33,7 +34,9 @@ index.html                 client HTML entry
 vite.config.ts             React, Tailwind, and the colyseus/vite plugin (runs the server inside Vite in dev)
 vitest.config.ts           test config, kept apart so tests don't boot the dev server
 src/app.config.ts          server config: rooms, HTTP routes, Express middleware
-src/rooms/                 rooms and their state schemas
+src/rooms/                 QuizRoom and its state schema
+src/game/                  question generator and scoring (pure functions)
+src/shared/                rules and age groups used by both server and client
 src/client/                React app; colyseus.ts holds the shared SDK client
 test/                      *.test.ts, run by Vitest
 ```

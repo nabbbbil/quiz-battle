@@ -3,8 +3,9 @@ import { cli, Options } from "@colyseus/loadtest";
 
 export async function main(options: Options) {
   const client = new Client(options.endpoint);
+  // QuizRoom needs a nickname, unique within the room.
   const room: Room = await client.joinOrCreate(options.roomName, {
-    // your join options here...
+    name: `Bot ${Math.floor(Math.random() * 10000)}`,
   });
 
   console.log("joined successfully!");
