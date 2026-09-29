@@ -6,7 +6,9 @@ import { client } from "./colyseus";
 import { readInviteCode } from "./inviteLink";
 import { Home } from "./screens/Home";
 import { Lobby, type LobbyPlayer } from "./screens/Lobby";
-import { GameView } from "./screens/GameView";
+import { Question } from "./screens/Question";
+import { Reveal } from "./screens/Reveal";
+import { Podium } from "./screens/Podium";
 import { DEFAULT_AGE_GROUP, type AgeGroup } from "../shared/ageGroups";
 import { MAX_PLAYERS, MIN_PLAYERS } from "../shared/rules";
 
@@ -175,14 +177,13 @@ export function App() {
           }}
           onLeave={leave}
         />
+      ) : state.phase === "question" ? (
+        // Keyed by round so each question starts with a fresh screen and timer.
+        <Question key={state.round} state={state} mySessionId={room.sessionId} onAnswer={(choice) => room.send("answer", { choice })} />
+      ) : state.phase === "reveal" ? (
+        <Reveal key={state.round} state={state} mySessionId={room.sessionId} />
       ) : (
-        <GameView
-          state={state}
-          mySessionId={room.sessionId}
-          onAnswer={(choice) => room.send("answer", { choice })}
-          onPlayAgain={() => room.send("playAgain")}
-          onLeave={leave}
-        />
+        <Podium state={state} mySessionId={room.sessionId} onPlayAgain={() => room.send("playAgain")} onLeave={leave} />
       )}
     </>
   );

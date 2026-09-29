@@ -73,7 +73,9 @@ src/client/main.tsx                React entry
 src/client/App.tsx                 connects to the room (create, join, rejoin after refresh) and picks the screen
 src/client/colyseus.ts             the shared SDK client (reads VITE_SERVER_URL)
 src/client/inviteLink.ts           reads ?room=KTPQ, builds the share link
-src/client/screens/                Home, Lobby, GameView (temporary: Question, Reveal and Podium come next)
+src/client/screens/                Home, Lobby, Question, Reveal, Podium
+src/client/ui/                     Button, Equation (the question as tiles), Leaderboard
+src/client/gameState.ts            snapshot types, ranking, focus helper for the game screens
 src/client/ui/Button.tsx           the red/white tile button
 scripts/sample-questions.ts        npm run sample-questions prints a sample game
 DESIGN.md                          design direction (owner's answers) + dials
@@ -101,7 +103,7 @@ Each milestone ends with something you can run. Rough time: 5–7 evenings in to
 
 ### M2: Game loop ✅ server done 29 Sep 2026 (Claude, at your request)
 - **Room:** the phase machine lobby → question → reveal → … → podium → lobby. The `start` handler (host only, locks the room). Questions: call `makeQuestionSet(state.ageGroup, TOTAL_ROUNDS)` when the game starts and keep the result in a private room field (it holds `correctIndex`). Each round, copy only `text` and `choices` into the state. The timer: `this.clock.setInterval` counts `timeLeft` down, and `this.clock.setTimeout` moves from reveal to the next round. Clear old timers on every phase change. The `answer` handler with all the checks above. End early when all connected players have answered. Reveal, podium, `playAgain`.
-- **Claude, next:** designed Question screen (round x/10, timer bar, 2×2 grid of big answer buttons, a "Locked in, 3/5 answered" state), Reveal screen (right answer, your +points or Wrong, mini leaderboard), Podium screen. Until then `GameView.tsx` is a plain working stand-in.
+- **Claude:** ✅ Question screen (round x/10, timer bar, the question as tiles with red operator tiles and an empty box for the answer, 2×2 grid of big answer tiles, a "Locked in, 3 of 5 have answered" state), Reveal screen (your result and points, the box filled with the right answer, your place, scores so far), Podium screen (winner, top-3 stand, all scores, Play again for the host).
 - **Worth reading in the code:** authoritative servers, when to use state and when to use messages, keeping secrets from clients, timing on the server.
 
 ### M3: Scoring and tests ✅ done 29 Sep 2026 (Claude, at your request)

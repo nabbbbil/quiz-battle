@@ -18,9 +18,16 @@
   --color-ink: #1e1a17;        /* text, 16.2:1 */
   --color-ink-soft: #5b534c;   /* secondary text, 7.1:1 */
   --color-line: #857a70;       /* input borders, 3.9:1 (non-text needs 3:1) */
-  --color-red: #cf2a27;        /* operator red: the one action to press. White text on it is 5.2:1 */
+  --color-red: #cf2a27;        /* operator red: the button to press, and the + − × ÷ tiles. White on it is 5.2:1 */
   --color-red-deep: #9c1f1a;   /* tile bevel, error text (7.5:1) */
   --color-red-tint: #fbe4e0;   /* error box background */
+
+  /* The question timer bar. Transform, not width, so it stays smooth on cheap phones. */
+  --animate-drain: drain linear forwards;
+  @keyframes drain {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+  }
 }
 
 @layer base {
