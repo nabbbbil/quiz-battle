@@ -1,1 +1,49 @@
 @import "tailwindcss";
+@import "@fontsource-variable/fredoka";
+@import "@fontsource-variable/nunito";
+
+@theme {
+  /* Rounded faces echo the chunky tiles of the Godot Math Quiz Game.
+     Fredoka's letters and digits are easy to tell apart at a glance, which
+     matters for room codes and answers. Nunito keeps body text readable. */
+  --font-display: "Fredoka Variable", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Nunito Variable", ui-rounded, system-ui, sans-serif;
+
+  /* Only these colors exist, so nothing drifts to Tailwind's default palette.
+     Ratios checked against --color-paper (WCAG AA). */
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-paper: #fbf7f1;      /* page background */
+  --color-paper-deep: #f2ebe1; /* quiet panels and dividers */
+  --color-ink: #1e1a17;        /* text, 16.2:1 */
+  --color-ink-soft: #5b534c;   /* secondary text, 7.1:1 */
+  --color-line: #857a70;       /* input borders, 3.9:1 (non-text needs 3:1) */
+  --color-red: #cf2a27;        /* operator red: the one action to press. White text on it is 5.2:1 */
+  --color-red-deep: #9c1f1a;   /* tile bevel, error text (7.5:1) */
+  --color-red-tint: #fbe4e0;   /* error box background */
+}
+
+@layer base {
+  html {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-display);
+  }
+
+  /* A quick double tap on a button must not zoom the page. Pinch-zoom still works. */
+  button,
+  a {
+    touch-action: manipulation;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 3px;
+  }
+}

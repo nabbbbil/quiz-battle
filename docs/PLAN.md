@@ -67,9 +67,14 @@ src/rooms/schema/QuizState.ts      ← you (M1)   Player + QuizState
 src/game/questions.ts              ← you (M2)   pure functions, unit-tested
 src/game/scoring.ts                ← you (M3)   pure functions, unit-tested
 src/shared/rules.ts                ← you (M1)   ROUND_SECONDS, TOTAL_ROUNDS, MAX_PLAYERS, message names
-src/client/main.tsx, App.tsx       React entry (App.tsx is an M0 placeholder)
+src/client/main.tsx                React entry
+src/client/App.tsx                 ← you (M1)   for now it re-exports the sample-data preview
 src/client/colyseus.ts             the shared SDK client (reads VITE_SERVER_URL)
-src/client/screens/                Home, Lobby, Question, Reveal, Podium (Claude)
+src/client/inviteLink.ts           reads ?room=KTPQ, builds the share link
+src/client/screens/                Home, Lobby (done), Question, Reveal, Podium (Claude)
+src/client/ui/Button.tsx           the red/white tile button
+src/client/preview/                sample data for checking screens; delete once the real room is wired
+DESIGN.md                          design direction (owner's answers) + dials
 test/*.test.ts                     Vitest
 ```
 
@@ -87,7 +92,10 @@ Each milestone ends with something you can run. Rough time: 5–7 evenings in to
 
 ### M1: Rooms and lobby (you write, ~1 evening)
 - **You:** the `Player` and `QuizState` schemas. In `QuizRoom`: `onCreate` (4-letter code using the docs' "custom room ID" recipe, `maxClients = 8`), `onJoin` (add the player, first one is host, check the name), `onLeave` (remove the player, pass on the host role). Register it in `src/app.config.ts`. In the client: `client.create()` and `client.joinById(code, { name })`, and read the player list with `useRoomState`.
-- **Claude:** Home screen (nickname, Create, Join with code) and Lobby screen (big room code, player list with host badge, Start button only for the host). Built with fake data first. A share link `?room=KTPQ` fills in the code.
+- **Claude:** ✅ Home screen (nickname, Create, Join with code) and Lobby screen (big room code, player list with host badge, Start button only for the host). Built with sample data first (`src/client/preview/`). A share link `?room=KTPQ` fills in the code.
+  - Home props: `initialCode`, `initialName`, `busy`, `error`, `onCreate(name)`, `onJoin(code, name)`.
+  - Lobby props: `code`, `players` (array of `{ sessionId, name, isHost, connected }`, undefined while loading), `mySessionId`, `minPlayers`, `maxPlayers`, `starting`, `onStart()`, `onLeave()`.
+  - Your wiring: turn the state's `players` map into that array, and pass `room.roomId` as `code` and `room.sessionId` as `mySessionId`.
 - **You learn:** the room lifecycle, how state syncs, `sessionId`, joining a room by its ID.
 
 ### M2: Game loop (you write, ~2 evenings)
