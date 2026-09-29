@@ -24,6 +24,7 @@
     "src",
     "test",
     "loadtest",
+    "scripts",
     "vite.config.ts",
     "vitest.config.ts"
   ]

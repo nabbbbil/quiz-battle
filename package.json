@@ -15,6 +15,7 @@
     "typecheck": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "sample-questions": "tsx scripts/sample-questions.ts",
     "loadtest": "tsx loadtest/example.ts --room my_room --numClients 2",
     "clean": "rimraf dist"
   },
