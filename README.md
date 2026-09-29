@@ -45,10 +45,12 @@ test/                      *.test.ts, run by Vitest
 
 The game server runs on **Render** (free web service) and the page on **Vercel**. Both redeploy on every push to `main`. The settings live in the repo: [render.yaml](render.yaml) and [vercel.json](vercel.json).
 
-1. **Render (game server).** Sign in at render.com with GitHub → **New → Blueprint** → pick this repo. Render reads `render.yaml` and asks for `ALLOWED_ORIGINS`: enter `https://quiz-battle.vercel.app` for now (you can fix it in step 3). When it's live, copy the service address, e.g. `https://quiz-battle.onrender.com`.
-2. **Vercel (page).** **Add New → Project** → import this repo. Under **Environment Variables** add `VITE_SERVER_URL` = the Render address from step 1. Deploy, then copy the Vercel address.
-3. **If the Vercel address isn't `https://quiz-battle.vercel.app`**, go to the Render service → **Environment** → set `ALLOWED_ORIGINS` to the real one. Render restarts with it.
-4. **Check:** open the Vercel address. If the server was asleep you'll see "Waking up the game server…" for up to a minute, then Create and Join turn on.
+The page is live at **https://quiz-battle-pi.vercel.app** (Vercel project `quiz-battle`, team `muhammadnabil`), with `VITE_SERVER_URL=https://quiz-battle.onrender.com`.
+
+1. **Render (game server).** Sign in at render.com with GitHub → **New → Blueprint** → pick this repo. Render reads `render.yaml` and asks for `ALLOWED_ORIGINS`: enter `https://quiz-battle-pi.vercel.app`.
+2. **If Render's address isn't `https://quiz-battle.onrender.com`**, set `VITE_SERVER_URL` on Vercel (Project → Settings → Environment Variables) to the real one and redeploy.
+3. **If you add another address for the page** (a custom domain like `quiz.muhdnabil.site`), add it to `ALLOWED_ORIGINS` on Render, comma-separated.
+4. **Check:** open https://quiz-battle-pi.vercel.app. If the server was asleep you'll see "Waking up the game server…" for up to a minute, then Create and Join turn on.
 
 `VITE_SERVER_URL` is baked into the page when Vercel builds it, so changing it needs a redeploy on Vercel.
 

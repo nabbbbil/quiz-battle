@@ -19,7 +19,7 @@ services:
       # The built server listens on 2567, so tell Render to send traffic there.
       - key: PORT
         value: "2567"
-      # The Vercel address of the game, e.g. https://quiz-battle.vercel.app
+      # The Vercel address of the game: https://quiz-battle-pi.vercel.app
       # (comma-separate more than one). Render asks for it when you create the service.
       - key: ALLOWED_ORIGINS
         sync: false

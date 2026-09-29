@@ -123,7 +123,8 @@ Each milestone ends with something you can run. Rough time: 5–7 evenings in to
   - A "Waking up the game server…" box on Home that polls `/health`, keeps Create and Join off until the server answers, and offers "Try again" after 2 minutes.
   - `render.yaml` (free plan, Singapore region, build/start commands, `PORT=2567`, `NODE_ENV=production`, asks for `ALLOWED_ORIGINS`), `vercel.json` (client-only build, output `dist/client`), `.node-version` (24).
   - **Checked on this PC:** built server in production mode on :2567 plus the built client served separately on :4173. Create, join, one round, the waking box (server stopped, then started), and CORS (allowed, localhost, and another site all answered as intended).
-- **You:** the four steps under **Deploy (free)** in the README: Render Blueprint, Vercel import with `VITE_SERVER_URL`, fix `ALLOWED_ORIGINS` if the Vercel address differs, then open it.
+- **Vercel ✅ (Claude, through the Vercel connector):** project `quiz-battle` in team `muhammadnabil`, linked to GitHub (every push to `main` deploys), `VITE_SERVER_URL=https://quiz-battle.onrender.com`. Live at https://quiz-battle-pi.vercel.app.
+- **You:** Render. **New → Blueprint** → this repo, `ALLOWED_ORIGINS=https://quiz-battle-pi.vercel.app`. If Render's address isn't `quiz-battle.onrender.com`, the Vercel variable needs updating and a redeploy.
 - **Optional:** point `quiz.muhdnabil.site` at Vercel (a DNS change you make yourself), then add the game to your portfolio with a **Play now** link.
 - **If you want it always on later (still free):**
   - Oracle Cloud "Always Free" VM, set up with your Ubuntu/UFW skills. Needs a card to verify your identity, but doesn't charge it.
