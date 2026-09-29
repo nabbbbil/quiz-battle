@@ -5,62 +5,54 @@ import {
   playground,
   createRouter,
   createEndpoint,
+  matchMaker,
 } from "colyseus";
 
-/**
- * Import your Room files
- */
 import { QuizRoom } from "./rooms/QuizRoom.js";
 
-const server = defineServer({
+// Which websites may call this server from a browser. On Render, ALLOWED_ORIGINS
+// holds the Vercel address(es), comma-separated. localhost is always allowed so
+// a local build can be tested against the live server. In development every
+// origin is allowed, so phones on the same Wi-Fi can connect.
+const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+const LOCALHOST = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
-  /**
-   * Define your room handlers:
-   */
+if (process.env.NODE_ENV === "production") {
+  matchMaker.controller.getCorsHeaders = (headers) => {
+    const origin = headers.get("origin") ?? "";
+    const allowed = allowedOrigins.includes(origin) || LOCALHOST.test(origin);
+    return {
+      // Echo the origin only when it's allowed. Any other site gets a value that
+      // doesn't match its own, so the browser refuses to let it use the response.
+      "Access-Control-Allow-Origin": allowed ? origin : (allowedOrigins[0] ?? "null"),
+      Vary: "Origin",
+    };
+  };
+}
+
+const server = defineServer({
   rooms: {
     quiz_room: defineRoom(QuizRoom),
   },
 
-  /**
-   * Experimental: Define API routes. Built-in integration with the "playground" and SDK.
-   *
-   * Usage from SDK:
-   *   client.http.get("/api/hello").then((response) => {})
-   *
-   */
   routes: createRouter({
-    api_hello: createEndpoint("/api/hello", { method: "GET" }, async (ctx) => {
-      return { message: "Hello World" };
+    // Render checks this to know the server is up, and the client polls it to
+    // show "Waking up the game server" while a sleeping free instance starts.
+    health: createEndpoint("/health", { method: "GET" }, async () => {
+      return { ok: true };
     }),
   }),
 
-  /**
-   * Bind your custom express routes here:
-   * Read more: https://expressjs.com/en/starter/basic-routing.html
-   */
   express: (app) => {
-
-    app.get("/hi", (req, res) => {
-      res.send("It's time to kick ass and chew bubblegum!");
-    });
-
-    /**
-     * Use @colyseus/monitor
-     * If you expose it in production, make sure to protect it with a password:
-     * https://docs.colyseus.io/tools/monitoring#password-protection
-     */
+    // Debug tools, never exposed in production.
     if (process.env.NODE_ENV !== "production") {
       app.use("/monitor", monitor());
-    }
-
-    /**
-     * Use @colyseus/playground
-     * (It is not recommended to expose this route in a production environment)
-     */
-    if (process.env.NODE_ENV !== "production") {
       app.use("/playground", playground());
     }
-  }
+  },
 });
 
 export default server;

@@ -3,6 +3,7 @@ import { useRoom, useRoomState } from "@colyseus/react";
 import { CloseCode, ErrorCode, type Room } from "@colyseus/sdk";
 import type { QuizRoom } from "../rooms/QuizRoom";
 import { client } from "./colyseus";
+import { useServerStatus } from "./useServerStatus";
 import { readInviteCode } from "./inviteLink";
 import { Home } from "./screens/Home";
 import { Lobby, type LobbyPlayer } from "./screens/Lobby";
@@ -69,6 +70,7 @@ export function App() {
   const [dropped, setDropped] = useState(false);
   const [starting, setStarting] = useState(false);
 
+  const server = useServerStatus();
   const { room, error } = useRoom(request ? () => connect(request) : null, [request]);
   const snapshot = useRoomState(room);
   // The first snapshot can land before the full state has been decoded.
@@ -135,6 +137,8 @@ export function App() {
         initialName={lastName}
         initialAgeGroup={lastAgeGroup}
         busy={request ? (request.kind === "create" ? "create" : "join") : null}
+        serverStatus={server.status}
+        onRetryServer={server.retry}
         error={homeError}
         onCreate={(name, ageGroup) => {
           setLastName(name);

@@ -5,7 +5,7 @@
   "description": "Quiz Battle: a browser multiplayer math quiz (Colyseus + React)",
   "type": "module",
   "engines": {
-    "node": ">= 22.0.0"
+    "node": ">=22.12 <25"
   },
   "scripts": {
     "dev": "vite",

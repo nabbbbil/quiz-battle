@@ -115,18 +115,15 @@ Each milestone ends with something you can run. Rough time: 5–7 evenings in to
 - **Done:** a "Reconnecting…" banner, and "no game with that code" / "already started" errors on the Home screen.
 - **Still to test by hand:** play on your phone and a laptop on the same Wi-Fi (`npm run dev -- --host`). Turn one off with DevTools → Network → Offline. Refresh in the middle of a question. Lock the phone screen for 10 s.
 
-### M5: Ship it for free (Claude sets it up, you do the account steps, ~1 evening)
-- **Claude:**
-  - A `/health` route. The playground and monitor are already off when `NODE_ENV=production`.
-  - CORS on the server so it only accepts the Vercel domain and localhost.
-  - The client reads the server address from `VITE_SERVER_URL` (already wired in `src/client/colyseus.ts`; unset in dev it uses the page's own host).
-  - A "Waking up the game server (up to a minute)…" screen that checks `/health` and turns on Create/Join once the server answers.
-  - A `render.yaml` in the repo with the settings below.
-- **You, on Render:** New → Web Service → connect the GitHub repo → Free instance.
-  - Build: `npm ci --include=dev && npm run build` (`--include=dev` because Vite is a dev dependency and `NODE_ENV=production` would otherwise skip it)
-  - Start: `node dist/server/server.mjs`
-  - Env: `NODE_ENV=production`, `PORT=2567` (the generated server entry listens on 2567)
-- **You, on Vercel:** import the same repo. Root directory: `./`. Build command: `npm run build:client`. Output directory: `dist/client`. Env: `VITE_SERVER_URL=wss://<your-service>.onrender.com`.
+### M5: Ship it for free (Claude's part ✅ done 29 Sep 2026, your account steps next)
+- **Claude (done):**
+  - A `/health` route. The playground and monitor are off when `NODE_ENV=production`.
+  - CORS: in production the server only answers browser calls from the addresses in `ALLOWED_ORIGINS` (the Vercel address) and localhost.
+  - The client reads the server address from `VITE_SERVER_URL` (unset in dev, it uses the page's own host).
+  - A "Waking up the game server…" box on Home that polls `/health`, keeps Create and Join off until the server answers, and offers "Try again" after 2 minutes.
+  - `render.yaml` (free plan, Singapore region, build/start commands, `PORT=2567`, `NODE_ENV=production`, asks for `ALLOWED_ORIGINS`), `vercel.json` (client-only build, output `dist/client`), `.node-version` (24).
+  - **Checked on this PC:** built server in production mode on :2567 plus the built client served separately on :4173. Create, join, one round, the waking box (server stopped, then started), and CORS (allowed, localhost, and another site all answered as intended).
+- **You:** the four steps under **Deploy (free)** in the README: Render Blueprint, Vercel import with `VITE_SERVER_URL`, fix `ALLOWED_ORIGINS` if the Vercel address differs, then open it.
 - **Optional:** point `quiz.muhdnabil.site` at Vercel (a DNS change you make yourself), then add the game to your portfolio with a **Play now** link.
 - **If you want it always on later (still free):**
   - Oracle Cloud "Always Free" VM, set up with your Ubuntu/UFW skills. Needs a card to verify your identity, but doesn't charge it.

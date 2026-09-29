@@ -41,10 +41,24 @@ src/client/                React app; colyseus.ts holds the shared SDK client
 test/                      *.test.ts, run by Vitest
 ```
 
+## Deploy (free)
+
+The game server runs on **Render** (free web service) and the page on **Vercel**. Both redeploy on every push to `main`. The settings live in the repo: [render.yaml](render.yaml) and [vercel.json](vercel.json).
+
+1. **Render (game server).** Sign in at render.com with GitHub → **New → Blueprint** → pick this repo. Render reads `render.yaml` and asks for `ALLOWED_ORIGINS`: enter `https://quiz-battle.vercel.app` for now (you can fix it in step 3). When it's live, copy the service address, e.g. `https://quiz-battle.onrender.com`.
+2. **Vercel (page).** **Add New → Project** → import this repo. Under **Environment Variables** add `VITE_SERVER_URL` = the Render address from step 1. Deploy, then copy the Vercel address.
+3. **If the Vercel address isn't `https://quiz-battle.vercel.app`**, go to the Render service → **Environment** → set `ALLOWED_ORIGINS` to the real one. Render restarts with it.
+4. **Check:** open the Vercel address. If the server was asleep you'll see "Waking up the game server…" for up to a minute, then Create and Join turn on.
+
+`VITE_SERVER_URL` is baked into the page when Vercel builds it, so changing it needs a redeploy on Vercel.
+
 ## Environment
 
 | Variable | Where | Purpose |
 |---|---|---|
-| `VITE_SERVER_URL` | Vercel (client) | Game server address, e.g. `wss://quiz-battle.onrender.com`. Unset in dev: the client uses its own host. |
-| `NODE_ENV=production` | Render (server) | Turns off the playground and monitor |
+| `VITE_SERVER_URL` | Vercel (client) | Game server address, e.g. `https://quiz-battle.onrender.com`. Unset in dev: the client uses its own host. |
+| `ALLOWED_ORIGINS` | Render (server) | Websites allowed to call the server from a browser (the Vercel address), comma-separated. localhost is always allowed. |
+| `NODE_ENV=production` | Render (server) | Turns off the playground and monitor, and turns on the `ALLOWED_ORIGINS` check |
 | `PORT=2567` | Render (server) | The built server listens on 2567, so Render must route there |
+
+Render's free server sleeps after 15 minutes without players and takes about a minute to wake. Answers during a game count as traffic, so it never sleeps mid-game.

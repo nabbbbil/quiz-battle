@@ -1,0 +1,25 @@
+# Render Blueprint for the game server (free plan).
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: quiz-battle
+    runtime: node
+    plan: free
+    # Closest Render region to Malaysia, so answers arrive with less lag.
+    region: singapore
+    # --include=dev: Vite builds the server, and it's a dev dependency.
+    # NODE_ENV=production would otherwise make npm skip it.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node dist/server/server.mjs
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # The built server listens on 2567, so tell Render to send traffic there.
+      - key: PORT
+        value: "2567"
+      # The Vercel address of the game, e.g. https://quiz-battle.vercel.app
+      # (comma-separate more than one). Render asks for it when you create the service.
+      - key: ALLOWED_ORIGINS
+        sync: false

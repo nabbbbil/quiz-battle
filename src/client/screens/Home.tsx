@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button } from "../ui/Button";
 import { NAME_MAX_LENGTH, ROOM_CODE_LENGTH } from "../../shared/rules";
 import { AGE_GROUPS, DEFAULT_AGE_GROUP, type AgeGroup } from "../../shared/ageGroups";
+import type { ServerStatus } from "../useServerStatus";
 
 export type HomeBusy = "create" | "join" | null;
 
@@ -13,6 +14,9 @@ interface HomeProps {
   /** The age group picked last time. */
   initialAgeGroup?: AgeGroup;
   busy: HomeBusy;
+  /** Whether the game server has answered yet. Create and Join wait for it. */
+  serverStatus: ServerStatus;
+  onRetryServer: () => void;
   /** Why the last create or join failed, in plain words. */
   error?: string;
   onCreate: (name: string, ageGroup: AgeGroup) => void;
@@ -24,6 +28,8 @@ export function Home({
   initialName = "",
   initialAgeGroup = DEFAULT_AGE_GROUP,
   busy,
+  serverStatus,
+  onRetryServer,
   error,
   onCreate,
   onJoin,
@@ -36,6 +42,8 @@ export function Home({
   const nameRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const invited = initialCode !== "";
+  // "checking" isn't blocked: an awake server answers in a blink, so no flash of disabled buttons.
+  const serverDown = serverStatus === "waking" || serverStatus === "unreachable";
 
   function validName(): string | null {
     const trimmed = name.trim();
@@ -44,7 +52,7 @@ export function Home({
   }
 
   function create() {
-    if (busy) return;
+    if (busy || serverDown) return;
     setCodeError(undefined);
     const trimmed = validName();
     if (trimmed) onCreate(trimmed, ageGroup);
@@ -52,7 +60,7 @@ export function Home({
   }
 
   function join() {
-    if (busy) return;
+    if (busy || serverDown) return;
     const trimmed = validName();
     const codeOk = code.length === ROOM_CODE_LENGTH;
     setCodeError(codeOk ? undefined : `Room codes are ${ROOM_CODE_LENGTH} letters.`);
@@ -114,7 +122,7 @@ export function Home({
           value="join"
           variant={invited ? "primary" : "secondary"}
           busy={busy === "join"}
-          disabled={busy === "create"}
+          disabled={busy === "create" || serverDown}
         >
           {busy === "join" ? "Joining…" : "Join"}
         </Button>
@@ -167,7 +175,7 @@ export function Home({
         value="create"
         variant={invited ? "secondary" : "primary"}
         busy={busy === "create"}
-        disabled={busy === "join"}
+        disabled={busy === "join" || serverDown}
         className="w-full"
       >
         {busy === "create" ? "Creating room…" : "Create a room"}
@@ -185,6 +193,21 @@ export function Home({
       </header>
 
       <form noValidate onSubmit={handleSubmit} aria-busy={busy !== null} className="mt-8 flex flex-col gap-8">
+        {serverStatus === "waking" && (
+          <div role="status" className="rounded-xl border-2 border-ink bg-paper-deep px-4 py-3">
+            <p className="font-semibold">Waking up the game server…</p>
+            <p>It sleeps when nobody's playing. This can take up to a minute. Create and Join turn on when it's ready.</p>
+          </div>
+        )}
+        {serverStatus === "unreachable" && (
+          <div role="alert" className="rounded-xl border-2 border-red-deep bg-red-tint px-4 py-3 text-red-deep">
+            <p className="font-semibold">The game server isn't answering.</p>
+            <p>Check your internet connection, then try again.</p>
+            <Button onClick={onRetryServer} className="mt-3">
+              Try again
+            </Button>
+          </div>
+        )}
         {error && (
           <div role="alert" className="rounded-xl border-2 border-red-deep bg-red-tint px-4 py-3 text-red-deep">
             <p className="font-semibold">That didn't work.</p>
