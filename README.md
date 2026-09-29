@@ -45,12 +45,14 @@ test/                      *.test.ts, run by Vitest
 
 The game server runs on **Render** (free web service) and the page on **Vercel**. Both redeploy on every push to `main`. The settings live in the repo: [render.yaml](render.yaml) and [vercel.json](vercel.json).
 
-The page is live at **https://quiz-battle-pi.vercel.app** (Vercel project `quiz-battle`, team `muhammadnabil`), with `VITE_SERVER_URL=https://quiz-battle.onrender.com`.
+**Live:** play at **https://quiz-battle-pi.vercel.app**.
 
-1. **Render (game server).** Sign in at render.com with GitHub → **New → Blueprint** → pick this repo. Render reads `render.yaml` and asks for `ALLOWED_ORIGINS`: enter `https://quiz-battle-pi.vercel.app`.
-2. **If Render's address isn't `https://quiz-battle.onrender.com`**, set `VITE_SERVER_URL` on Vercel (Project → Settings → Environment Variables) to the real one and redeploy.
-3. **If you add another address for the page** (a custom domain like `quiz.muhdnabil.site`), add it to `ALLOWED_ORIGINS` on Render, comma-separated.
-4. **Check:** open https://quiz-battle-pi.vercel.app. If the server was asleep you'll see "Waking up the game server…" for up to a minute, then Create and Join turn on.
+| Part | Where | Settings |
+|---|---|---|
+| Page | Vercel project `quiz-battle` (team `muhammadnabil`) | `VITE_SERVER_URL=https://quiz-battle-r2kv.onrender.com` |
+| Game server | Render service `quiz-battle` (Blueprint, free, Singapore) at https://quiz-battle-r2kv.onrender.com | `ALLOWED_ORIGINS=https://quiz-battle-pi.vercel.app` |
+
+To set it up from scratch: create the Render service with **New → Blueprint** (it reads `render.yaml` and asks for `ALLOWED_ORIGINS`), import the repo on Vercel with `VITE_SERVER_URL` set to the Render address, and make sure each side names the other's address. If you add a custom domain for the page (like `quiz.muhdnabil.site`), add it to `ALLOWED_ORIGINS` on Render, comma-separated. If the server was asleep you'll see "Waking up the game server…" for up to a minute, then Create and Join turn on.
 
 `VITE_SERVER_URL` is baked into the page when Vercel builds it, so changing it needs a redeploy on Vercel.
 
@@ -58,7 +60,7 @@ The page is live at **https://quiz-battle-pi.vercel.app** (Vercel project `quiz-
 
 | Variable | Where | Purpose |
 |---|---|---|
-| `VITE_SERVER_URL` | Vercel (client) | Game server address, e.g. `https://quiz-battle.onrender.com`. Unset in dev: the client uses its own host. |
+| `VITE_SERVER_URL` | Vercel (client) | Game server address, e.g. `https://quiz-battle-r2kv.onrender.com`. Unset in dev: the client uses its own host. |
 | `ALLOWED_ORIGINS` | Render (server) | Websites allowed to call the server from a browser (the Vercel address), comma-separated. localhost is always allowed. |
 | `NODE_ENV=production` | Render (server) | Turns off the playground and monitor, and turns on the `ALLOWED_ORIGINS` check |
 | `PORT=2567` | Render (server) | The built server listens on 2567, so Render must route there |

@@ -115,7 +115,7 @@ Each milestone ends with something you can run. Rough time: 5–7 evenings in to
 - **Done:** a "Reconnecting…" banner, and "no game with that code" / "already started" errors on the Home screen.
 - **Still to test by hand:** play on your phone and a laptop on the same Wi-Fi (`npm run dev -- --host`). Turn one off with DevTools → Network → Offline. Refresh in the middle of a question. Lock the phone screen for 10 s.
 
-### M5: Ship it for free (Claude's part ✅ done 29 Sep 2026, your account steps next)
+### M5: Ship it for free ✅ live 29 Sep 2026
 - **Claude (done):**
   - A `/health` route. The playground and monitor are off when `NODE_ENV=production`.
   - CORS: in production the server only answers browser calls from the addresses in `ALLOWED_ORIGINS` (the Vercel address) and localhost.
@@ -123,8 +123,10 @@ Each milestone ends with something you can run. Rough time: 5–7 evenings in to
   - A "Waking up the game server…" box on Home that polls `/health`, keeps Create and Join off until the server answers, and offers "Try again" after 2 minutes.
   - `render.yaml` (free plan, Singapore region, build/start commands, `PORT=2567`, `NODE_ENV=production`, asks for `ALLOWED_ORIGINS`), `vercel.json` (client-only build, output `dist/client`), `.node-version` (24).
   - **Checked on this PC:** built server in production mode on :2567 plus the built client served separately on :4173. Create, join, one round, the waking box (server stopped, then started), and CORS (allowed, localhost, and another site all answered as intended).
-- **Vercel ✅ (Claude, through the Vercel connector):** project `quiz-battle` in team `muhammadnabil`, linked to GitHub (every push to `main` deploys), `VITE_SERVER_URL=https://quiz-battle.onrender.com`. Live at https://quiz-battle-pi.vercel.app.
-- **You:** Render. **New → Blueprint** → this repo, `ALLOWED_ORIGINS=https://quiz-battle-pi.vercel.app`. If Render's address isn't `quiz-battle.onrender.com`, the Vercel variable needs updating and a redeploy.
+- **Vercel ✅ (Claude, through the Vercel connector):** project `quiz-battle` in team `muhammadnabil`, linked to GitHub (every push to `main` deploys), `VITE_SERVER_URL=https://quiz-battle-r2kv.onrender.com`. Live at https://quiz-battle-pi.vercel.app.
+- **Render ✅ (you):** Blueprint service `quiz-battle` at https://quiz-battle-r2kv.onrender.com, `ALLOWED_ORIGINS=https://quiz-battle-pi.vercel.app`.
+- **Checked live, 29 Sep 2026:** `/health`, the origin lock, playground hidden; two browser tabs created and joined a room, played a round (early reveal, scores), and a refresh mid-game rejoined.
+- **Still to do:** two phones on mobile data, one full game.
 - **Optional:** point `quiz.muhdnabil.site` at Vercel (a DNS change you make yourself), then add the game to your portfolio with a **Play now** link.
 - **If you want it always on later (still free):**
   - Oracle Cloud "Always Free" VM, set up with your Ubuntu/UFW skills. Needs a card to verify your identity, but doesn't charge it.
